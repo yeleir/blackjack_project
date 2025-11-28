@@ -1,4 +1,5 @@
 import db
+import random
 
 def create_deck():
     suits = ["Diamonds", "Clubs", "Spades", "Hearts"]
@@ -14,16 +15,35 @@ def create_deck():
                 value = rank
 
         #make card list
-        card = [suit, rank, value]
-        deck.append(card)
+            card = [suit, rank, value]
+            deck.append(card)
 
     return deck
 
 
 def main():
-    db.load_money()
+    money = db.load_money()
     print("BLACKJACK!")
     print("Blackjack payout is 3:2")
+    print()
+
+
+    deck = create_deck()
+    random.shuffle(deck)
+
+    player_hand = []
+    dealer_hand = []
+
+    for i in range(2):
+        player_hand.append(deck.pop())
+        dealer_hand.append(deck.pop())
+
+    print("test")
+    print(f"Money: {money}")
+    print(f"Player {player_hand}")
+    print(f"Dealer {dealer_hand}")
+    print(f"Cards Left {len(deck)}")
+
 
 
 if __name__ == '__main__':
