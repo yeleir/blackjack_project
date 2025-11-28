@@ -1,0 +1,9 @@
+# Ignore PyCharm settings
+.idea/
+
+# Ignore Python compiled files
+__pycache__/
+*.pyc
+# Ignore local data files
+money.txt
+DS_Store
