@@ -6,3 +6,10 @@ def load_money():
         print("No money file found.")
         print("Starting with 100.0")
         return 100.0
+    except ValueError:
+        print("Money file is empty. Resetting to 100.0")
+        return 100.0
+
+def save_money(amount):
+    with open("money.txt", "w") as f:
+        f.write(str(amount))
