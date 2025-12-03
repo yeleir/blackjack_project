@@ -91,7 +91,6 @@ def dealer_aces(hand):
             score = get_score(hand)
 
 
-
 def main():
     money = db.load_money()
     money = buy_chips(money)
@@ -99,7 +98,7 @@ def main():
     print("Blackjack payout is 3:2")
     print()
 
-    # bet = grab_bet(money)
+    bet = grab_bet(money)
 
     deck = create_deck()
     random.shuffle(deck)
@@ -113,23 +112,27 @@ def main():
 
         dealer_hand.append(deck.pop())
         dealer_aces(dealer_hand)
-    player_score = get_score(player_hand)
-    dealer_score = get_score(dealer_hand)
 
-    print("test")
-    # print(f"Bet: {bet}")
-    print("--------------------------")
-    print(f"Money: {money}")
-    print("--------------------------")
-    print(f"Player {player_hand}")
-    print(f"Player Score: {player_score}")
-    print("--------------------------")
-    print(f"Dealer {dealer_hand}")
-    print(f"Dealer Score: {dealer_score}")
-    print("--------------------------")
-    print(f"Cards Left {len(deck)}")
-    print("--------------------------")
-
+    while True:
+        player_score = get_score(player_hand)
+        dealer_score = get_score(dealer_hand)
+        print(f"Your hand: {player_hand}")
+        print(f"Your Score: {player_score}")
+        if player_score > 21:
+            print("BUST! You went over 21.")
+            money -= bet
+            db.save_money(money)
+            print(f"You lost {bet} chips. New balance: {money}")
+            return
+        hit_or_stand = input("Hit or stand? (hit/stand) :\n")
+        if hit_or_stand.lower() == "hit":
+            player_hand.append(deck.pop())
+            ace_choice(player_hand)
+        elif hit_or_stand.lower() == "stand":
+            print("You chose to stand.")
+            break
+        else:
+            print("Please enter either Hit or Stand.")
 
 if __name__ == '__main__':
     main()
