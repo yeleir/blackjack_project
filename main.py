@@ -26,7 +26,7 @@ def buy_chips(money):
     if current_money < 5:
         print(f"You only have {money}. You need at least 5 chips.")
         response = input("Do you want to buy chips? (y/n): ")
-        if response.lower == "y":
+        if response.lower() == "y":
             money += 100
             db.save_money(money)
             print(f"Added 100. New balance: {money}")
@@ -39,7 +39,7 @@ def buy_chips(money):
 def grab_bet(money):
     while True:
         try:
-            bet_amount = input("Bet Amount:\n")
+            bet_amount = input("Bet Amount:")
             bet = float(bet_amount)
             if bet < 5:
                 print(f"Minimum bet is 5. You have {money}.")
@@ -53,6 +53,45 @@ def grab_bet(money):
             print("Please enter a numeric value.")
 
 
+def get_score(hand):
+    total = 0
+    aces = 0
+    for card in hand:
+        total += card[2]
+    return total
+
+
+def ace_choice(hand):
+    score = get_score(hand)
+    last_card = hand[-1]
+
+    if last_card[1] == "Ace":
+        if score > 21:
+            print("You got a ace, but 11 would make you go over 21.\bConverting the 11 to a 1.")
+            last_card[2] = 1
+        else:
+            print(f"hand {hand}")
+            while True:
+                choice = input("You drew a Ace! Would you like to count it as 11 or 1?\b")
+                if choice == "1":
+                    last_card[2] = 1
+                    break
+                elif choice == "11":
+                    last_card[2] = 11
+                    break
+                else:
+                    print("Please enter either 1 or 11.")
+
+
+def dealer_aces(hand):
+    score = get_score(hand)
+    for card in hand:
+        if card[1] == "Ace" and score > 21:
+            card[2] = 1
+            score = get_score(hand)
+
+
+
 def main():
     money = db.load_money()
     money = buy_chips(money)
@@ -60,7 +99,7 @@ def main():
     print("Blackjack payout is 3:2")
     print()
 
-    bet = grab_bet(money)
+    # bet = grab_bet(money)
 
     deck = create_deck()
     random.shuffle(deck)
@@ -70,14 +109,26 @@ def main():
 
     for i in range(2):
         player_hand.append(deck.pop())
+        ace_choice(player_hand)
+
         dealer_hand.append(deck.pop())
+        dealer_aces(dealer_hand)
+    player_score = get_score(player_hand)
+    dealer_score = get_score(dealer_hand)
 
     print("test")
-    print(f"Bet: {bet}")
+    # print(f"Bet: {bet}")
+    print("--------------------------")
     print(f"Money: {money}")
+    print("--------------------------")
     print(f"Player {player_hand}")
+    print(f"Player Score: {player_score}")
+    print("--------------------------")
     print(f"Dealer {dealer_hand}")
+    print(f"Dealer Score: {dealer_score}")
+    print("--------------------------")
     print(f"Cards Left {len(deck)}")
+    print("--------------------------")
 
 
 if __name__ == '__main__':
