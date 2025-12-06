@@ -46,7 +46,7 @@ def grab_bet(money):
             elif bet > 1000:
                 print(f"Maximum bet is 1000.")
             elif bet > money:
-                print(f"You don't have enough money.\bCurrent money is {money}.")
+                print(f"You don't have enough money. Current money is {money}.")
             else:
                 return bet
         except ValueError:
@@ -70,7 +70,6 @@ def ace_choice(hand):
             print("You got a ace, but 11 would make you go over 21.\bConverting the 11 to a 1.")
             last_card[2] = 1
         else:
-            print(f"hand {hand}")
             while True:
                 choice = input("You drew a Ace! Would you like to count it as 11 or 1?\b")
                 if choice == "1":
@@ -93,88 +92,106 @@ def dealer_aces(hand):
 
 def main():
     money = db.load_money()
-    money = buy_chips(money)
     print("BLACKJACK!")
     print("Blackjack payout is 3:2")
-    print()
-    print(f"Money: {money}")
-    bet = grab_bet(money)
 
-    deck = create_deck()
-    random.shuffle(deck)
-
-    player_hand = []
-    dealer_hand = []
-
-    for i in range(2):
-        player_hand.append(deck.pop())
-        ace_choice(player_hand)
-
-        dealer_hand.append(deck.pop())
-        dealer_aces(dealer_hand)
-    print("\nDEALER'S SHOW CARD:")
-    show_card = dealer_hand[0]
-    print(f"{show_card[1]} of {show_card[0]}")
-
-    while True:
-        player_score = get_score(player_hand)
-        print("\nYOUR CARDS:")
-        for card in player_hand:
-            print(f"{card[1]} of {card[0]}")
-        if player_score > 21:
-            print(f"\nYOUR POINTS: {player_score}")
-            print("BUST! You went over 21.")
-            money -= bet
-            db.save_money(money)
-            print(f"You lost {bet} chips. New balance: {money}")
-            return
+    play_again = "y"
+    while play_again.lower() == "y":
         print()
-        hit_or_stand = input("Hit or stand? (hit/stand): ")
-        if hit_or_stand.lower() == "hit":
+        money = buy_chips(money)
+        print(f"Money: {money}")
+        bet = grab_bet(money)
+
+        deck = create_deck()
+        random.shuffle(deck)
+
+        player_hand = []
+        dealer_hand = []
+
+        for i in range(2):
             player_hand.append(deck.pop())
             ace_choice(player_hand)
-        elif hit_or_stand.lower() == "stand":
-            print("You chose to stand.")
-            break
-        else:
-            print("Please enter either Hit or Stand.")
-    #dealer brain
-    print("\nDEALER'S CARDS:")
-    for card in dealer_hand:
-        print(f"{card[1]} of {card[0]}")
-    dealer_score = get_score(dealer_hand)
-    while dealer_score < 17:
+
+            dealer_hand.append(deck.pop())
+            dealer_aces(dealer_hand)
+
+        print("\nDEALER'S SHOW CARD:")
+        show_card = dealer_hand[0]
+        print(f"{show_card[1]} of {show_card[0]}")
+
+        while True:
+            player_score = get_score(player_hand)
+            print("\nYOUR CARDS:")
+            for card in player_hand:
+                print(f"{card[1]} of {card[0]}")
+
+            if player_score > 21:
+                print(f"\nYOUR POINTS: {player_score}")
+                print("BUST! You went over 21.")
+                money -= bet
+                db.save_money(money)
+                print(f"You lost {bet} chips. New balance: {money}")
+                break
+
+            print()
+            hit_or_stand = input("Hit or stand? (hit/stand): ")
+            if hit_or_stand.lower() == "hit":
+                player_hand.append(deck.pop())
+                ace_choice(player_hand)
+            elif hit_or_stand.lower() == "stand":
+                print("You chose to stand.")
+                break
+            else:
+                print("Please enter either Hit or Stand.")
+
+        # only run dealer and scoring if player didn't bust
+        if player_score <= 21:
+            # dealer brain
+            print("\nDEALER'S CARDS:")
+            for card in dealer_hand:
+                print(f"{card[1]} of {card[0]}")
+            dealer_score = get_score(dealer_hand)
+            while dealer_score < 17:
+                print()
+                print("Dealer hits...")
+                new_card = deck.pop()
+                dealer_hand.append(new_card)
+                dealer_aces(dealer_hand)
+                dealer_score = get_score(dealer_hand)
+                print(f"{new_card[1]} of {new_card[0]}")
+
+            # final scoring
+            print(f"\nYOUR POINTS: {player_score}")
+            print(f"DEALER'S POINTS: {dealer_score}")
+
+            if dealer_score > 21:
+                print("Dealer busted! You win.")
+                money += bet
+
+            elif dealer_score > player_score:
+                print("Sorry. You lose.")
+                money -= bet
+
+            elif player_score > dealer_score:
+                print("You win!")
+                money += bet
+                # blackjack payout
+                if player_score == 21 and len(player_hand) == 2:
+                    bonus = bet * 0.5
+                    money += bonus
+                    print(f"Blackjack! Your bet payout is 3:2! An extra {bonus} chips!")
+            else:
+                print("Its a tie! You keep your bet.")
+
+            money = round(money, 2)
+            db.save_money(money)
+
         print()
-        print("Dealer hits...")
-        new_card = deck.pop()
-        dealer_hand.append(new_card)
-        dealer_aces(dealer_hand)
-        dealer_score = get_score(dealer_hand)
-        print(f"{new_card[1]} of {new_card[0]}")
-    #final scoring
-    print(f"\nYOUR POINTS: {player_score}")
-    print(f"DEALER'S POINTS: {dealer_score}")
+        play_again = input("Play again? (y/n): ")
+        if play_again.lower() != "y":
+            print("Come back soon!")
+            print("Bye!")
 
-    if dealer_score > 21:
-        print("Dealer busted! You win.")
-        money += bet
-
-    elif dealer_score > player_score:
-        print("Sorry. You lose.")
-        money -= bet
-
-    elif player_score > dealer_score:
-        print("You win!")
-        money += bet
-        #blackjack payout
-        if player_score == 21 and len(dealer_hand) == 2:
-            bonus = bet * 0.5
-            money += bonus
-            print(f"Blackjack! Your bet payout is 3:2! An extra {bonus} chips!")
-    else:
-        print("Its a tie! You keep your bet.")
-
-    db.save_money(money)
 
 if __name__ == '__main__':
     main()
